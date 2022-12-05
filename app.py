@@ -6,7 +6,7 @@ import numpy as np
 from scipy.io.wavfile import write
 
 from PIL import Image
-image = Image.open('ezgif.com-gif-maker.png')
+image = Image.open('1_I8jjjv3K4gY1mwdA4SNkdA.png')
 
 
 
