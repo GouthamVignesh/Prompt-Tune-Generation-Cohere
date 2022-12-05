@@ -1,39 +1,20 @@
 import streamlit as st
+import requests
+import streamlit as st
 import cohere
 import numpy as np
+from scipy.io.wavfile import write
+
+from PIL import Image
+image = Image.open('ezgif.com-gif-maker.png')
+
 
 
 co = cohere.Client('2N3UcA7d1YNSBfns9i1F6hyoDJKMx3unPamYmDn0')
 import numpy as np
 
-
-
-st.title("Prompt Tune to generate custom music notes and music using Cohere ")
-st.subheader("Welcome!")
-st.text("just write any text you want to change to audio form")
-stored_string=st.text_area(label="Input the text you want to convert to audio file"
-
-
-)
-
-
-with st.sidebar:
-    st.header("Made by:")
-    st.subheader("Ribence Kadel")
-    st.subheader('Goutam Vignesh')
-    st.subheader('Ajay Surya')
-    st.subheader('Saira Ali')
-    st.subheader('Aqsa Ashfaq ')
-
-
-
-
-def handle_upsert():    
-    main_container.text("")
-    main_container.text_area(value=generated_notes,label="The generated note is:")
-    main_container.audio(song_data,sample_rate=samplerate)
-st.button('Click for song', on_click=handle_upsert)
-main_container=st.container()
+st.write(st.config.get_option("server.enableCORS"))
+st.sidebar.header("prompt Tune")
 
 samplerate = 44100 #Frequecy in Hz
 
@@ -54,8 +35,6 @@ def get_wave(freq, duration=0.5):
 a_wave = get_wave(440, 1)
 
 
-from pprint import pprint
-
 def get_piano_notes():
     '''
     Returns a dict object for all the piano 
@@ -73,7 +52,6 @@ def get_piano_notes():
   
 # To get the piano note's frequencies
 note_freqs = get_piano_notes()
-
 
 def get_song_data(music_notes):
     '''
@@ -139,7 +117,13 @@ def cohere_generate(genre):
   --
   Genre:hip hop
   keys:C-G-g-a-F-F--C-G-g-a-F-F--C-a-C-d-C--C-a-g-F--g-a-d-c--C-F-d-C--a-C-d-C--C-a-g-F--g-a-d-C--C-F-d-C
-  --  
+  -- 
+  Genre: Pop
+  keys:C-C-C-C-D-CA--G-A-a-A-G-F-FA-G-A--C-C-C-C-D-C-C-G--G-G-A-a-A-G-F-F--F-C-C-C-C-C-C-C-A-A
+  --
+  Genre: Electronic
+  keys:G-G-G-G-A-a-A-G-F-F-G-A-G-A--F-F-C-C-C-C-C-C-C-A-A
+  --
   Genre: {genre} 
   keys:""",
   max_tokens=100
@@ -156,10 +140,53 @@ def cohere_generate(genre):
   return final_song
 
 
-generated_notes=cohere_generate(stored_string)
 
 
-print(generated_notes)
-song_data=get_song_data(generated_notes.strip())
+def get_song_data(music_notes,samplerate):
+    '''
+    Function to concatenate all the waves (notes)
+    '''
+    note_freqs = get_piano_notes() # Function that we made earlier
+    song = [get_wave(note_freqs[note]) for note in music_notes.split('-')]
+    song = np.concatenate(song)
+    
+    write('new_song.wav', samplerate, song.astype(np.int16))
+    return 'new_song.wav'
 
-print("new song has been created")
+
+st.title("Prompt Tune to generate custom music notes and music using Cohere 🎹")
+st.subheader("Welcome!😀")
+st.text("Define your music mood or Genre for the model to generate a customized music for you 🎹")
+st.info("Example : I want to hear a relaxing music")
+query = st.text_input('Please Enter the type of tune you want to generate',value="")
+
+
+with st.sidebar:
+    st.header("Made by:")
+    st.subheader("Ribence Kadel")
+    st.subheader('Goutam Vignesh')
+    st.subheader('Ajay Surya')
+    st.subheader('Saira Ali')
+    st.subheader('Aqsa Ashfaq ')
+
+    
+if st.button('Search'):
+    with st.spinner('Generating Custom music based on the input '):
+        
+            
+        generated_notes=cohere_generate(query)
+        st.info("Music Notes 🎶")
+        st.text_area(value=generated_notes,label="Generated Music Notes by the Model is ")
+        data = get_song_data(generated_notes.strip(),samplerate)
+        audio_file = open(data, 'rb')
+        audio_bytes = audio_file.read()
+
+
+        st.info("Generated Music")
+        st.audio(audio_bytes, format='audio/ogg')
+        
+        st.image(image, caption='Piano Octave Layout')
+
+
+        
+    
